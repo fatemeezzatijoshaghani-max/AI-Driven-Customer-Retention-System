@@ -1,0 +1,313 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        -816
+      ],
+      "id": "1195f9a4-5902-40d8-8a43-7811cf00b39f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM vw_AtRiskCustomers;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        -816
+      ],
+      "id": "3f746f80-25ed-4a91-a015-841a8db053fd",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "wrFyLaw4zRBRIB33",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=تو یک متخصص بازاریابی و حفظ مشتری (Retention Marketing) هستی.\nیک ایمیل/پیام کوتاه دلجویی و پیشنهاد بازگشت جذاب برای مشتری زیر بنویس:\n\n- کد مشتری: {{ $json.CustomerID }}\n- تعداد روزهای گذشته از آخرین خرید: {{ $json.Days_Since_Last_Purchase }} روز\n- تعداد کل سفارش‌ها: {{ $json.Total_Orders }}\n- کل مبلغ خریداری‌شده: {{ $json.Total_Spent }} پوند\n\nلحن پیام: محترمانه، صمیمی و ترغیب‌کننده.\nدر پیام به او یک کد تخفیف ویژه اختصاصی (مثلاً RETURN15) پیشنهاد بده تا دوباره از ما خرید کند."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -800
+      ],
+      "id": "1d6f0b12-40ea-491a-8791-73adc6fbc8a3",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FrwhwiNVA6xDS9Ti",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -368,
+        -816
+      ],
+      "id": "ba882010-5cb6-41c5-88d1-2a7860b06ea9",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 4
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        -800
+      ],
+      "id": "9dee95e6-5766-47d6-b0eb-787c37df0829",
+      "name": "Wait",
+      "webhookId": "0f2237c4-2d04-4ee9-b32a-cc51537655a9"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/178sWnwkR_ePiN7TyuMI7qWxnPARz-i66FHtPfLQQRp0/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/178sWnwkR_ePiN7TyuMI7qWxnPARz-i66FHtPfLQQRp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Generated_Message": "={{ $json.content.parts[0].text }}",
+            "CustomerID": "={{ $('Loop Over Items').item.json.CustomerID }}",
+            "total_spent": "={{ $('Loop Over Items').item.json.Total_Spent }}",
+            "Days_Since_Last_Purchase": "={{ $('Loop Over Items').item.json.Days_Since_Last_Purchase }}",
+            "Sent_Date": "={{ $now.format('-MM-DD') }}"
+          },
+          "matchingColumns": [
+            "CustomerID"
+          ],
+          "schema": [
+            {
+              "id": "CustomerID",
+              "displayName": "CustomerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_spent",
+              "displayName": "total_spent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Days_Since_Last_Purchase",
+              "displayName": "Days_Since_Last_Purchase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Generated_Message",
+              "displayName": "Generated_Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sent_Date",
+              "displayName": "Sent_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        -800
+      ],
+      "id": "d7a11ac3-8036-47ae-b936-8f4e0bedcecf",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "lrLUU78Wq5DspQtK",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "sendTo": "fatemeezzatijpshaghani@gmail.com",
+        "subject": "گزارش اتمام کمپین حفظ مشتریان",
+        "emailType": "text",
+        "message": "=سلام،  عملیات پردازش و ارسال پیام‌های کمپین حفظ مشتریان (Retention Campaign) با موفقیت به پایان رسید.  📊 خلاصه گزارش: - تعداد کل مشتریان پردازش‌شده: {{ $node[\"Microsoft SQL\"].json.length }} - وضعیت ثبت داده‌ها: تمامی پیام‌های تولیدشده توسط هوش مصنوعی در گوگل شیت ثبت گردیدند. - زمان اتمام: {{ $now.format('YYYY-MM-DD HH:mm') }}  با تشکر، سیستم اتوماسیون n8n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        -992
+      ],
+      "id": "b144b5c4-ea77-4f71-b1e3-5128c480bd7b",
+      "name": "Send a message",
+      "webhookId": "f04760e3-115c-49e9-8982-777f6d739636",
+      "credentials": {
+        "googleApi": {
+          "id": "lrLUU78Wq5DspQtK",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "512022e7-3ace-4cf3-b244-f2ec0c665f40",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6ae4a78490327b9fda1fd81b776754aa41a55d59e4d96ae48a17b4eabe1ce6fe"
+  },
+  "nodeGroups": [],
+  "id": "j1O66g3a51Jn5SoL",
+  "tags": []
+}
