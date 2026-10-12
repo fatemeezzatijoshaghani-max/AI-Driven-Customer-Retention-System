@@ -20,6 +20,10 @@ Customer churn is a critical challenge in FMCG and e-commerce retail. This syste
 ## 📂 Repository Contents
 - `n8n-retention-workflow.json`: The complete exportable n8n workflow pipeline.
 - `vw_AtRiskCustomers.sql`: SQL scripts for RFM views and data extraction.
+- ## 🎥 Demo & Execution
+Here is a quick walkthrough of the automated workflow running in n8n and logging data into Google Sheets:
+
+![Workflow Demo](https://github.com/user-attachments/assets/cd786599-93e4-4b91-b2b9-0fe17e719f81)
 
 ## 📷 Workflow Architecture
 *(Insert your n8n workflow screenshot here)*
